@@ -40,6 +40,9 @@
       width: 100%;
     }
 
+    /* Clinic logo (hidden if logo.png is missing) */
+    .logo { max-height: 90px; max-width: min(360px, 80vw); margin-bottom: 32px; object-fit: contain; }
+
     /* Green checkmark */
     .check { width: 160px; height: 160px; margin-bottom: 28px; }
     .check circle { fill: var(--green); transform-origin: center; animation: pop .45s ease-out both; }
@@ -88,6 +91,7 @@
 </head>
 <body>
   <main>
+    <img class="logo" src="logo.png" alt="iHealth Clinic" onerror="this.remove()">
     <svg class="check" viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="48"/>
       <path d="M28 52 L44 67 L73 36"/>

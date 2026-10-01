@@ -11,4 +11,7 @@ countdown it returns to the form so the kiosk resets.
 3. In JotForm: Settings → Thank You Page → Redirect to an external link →
    `https://zeronolidge.github.io/kiosk-confirmation/`
 
+Logo: upload the clinic logo to the repo root as `logo.png` (Add file → Upload files).
+It shows above the checkmark; if the file is missing, the page simply shows no logo.
+
 Timer lengths and translations are in the Settings section at the top of the script.
