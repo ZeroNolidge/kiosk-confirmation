@@ -6,9 +6,9 @@ Español, Português, Русский, Türkçe, Oʻzbekcha and العربية. A
 countdown it returns to the form so the kiosk resets.
 
 ## Setup
-1. In `index.html`, replace `YOUR_FORM_ID` (two places) with the form link.
+1. The form link (https://form.jotform.com/221544859310152) is set in `index.html` in two places: the meta refresh and `FORM_URL`.
 2. Settings → Pages → Deploy from a branch → `main` / root.
 3. In JotForm: Settings → Thank You Page → Redirect to an external link →
-   `https://<username>.github.io/kiosk-confirmation/`
+   `https://zeronolidge.github.io/kiosk-confirmation/`
 
 Timer lengths and translations are in the Settings section at the top of the script.
