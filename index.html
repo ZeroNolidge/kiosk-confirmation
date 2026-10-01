@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Submitted</title>
+  <!-- Safety net: if JavaScript fails, still return to the form after 60s -->
+  <meta http-equiv="refresh" content="60;url=https://form.jotform.com/YOUR_FORM_ID">
+  <style>
+    :root {
+      --bg: #f3f8f5;
+      --ink: #15261c;
+      --muted: #4b5d52;
+      --green: #23985a;
+      --card: #ffffff;
+      --line: #d5e3da;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", Tahoma, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      max-width: 900px;
+      width: 100%;
+    }
+
+    /* Green checkmark */
+    .check { width: 160px; height: 160px; margin-bottom: 28px; }
+    .check circle { fill: var(--green); transform-origin: center; animation: pop .45s ease-out both; }
+    .check path {
+      fill: none; stroke: #fff; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 100; stroke-dashoffset: 100;
+      animation: draw .45s .35s ease-out forwards;
+    }
+    @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    h1 { font-size: clamp(2rem, 5vw, 3.4rem); margin: 0 0 18px; line-height: 1.2; }
+    p  { font-size: clamp(1.4rem, 3.2vw, 2.2rem); color: var(--muted); margin: 0; line-height: 1.45; }
+    #msg { transition: opacity .2s; }
+    #msg.fade { opacity: 0; }
+
+    /* Language buttons */
+    nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-width: 1100px;
+      margin: 40px 0 24px;
+    }
+    nav button {
+      font: inherit;
+      font-size: 1.35rem;
+      padding: 18px 12px;
+      border-radius: 14px;
+      border: 2px solid var(--line);
+      background: var(--card);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    nav button[aria-pressed="true"] {
+      border-color: var(--green);
+      background: #e4f4ea;
+      font-weight: 600;
+    }
+
+    /* Countdown bar (no words, so it works in every language) */
+    .bar { width: 100%; height: 10px; background: var(--line); position: fixed; left: 0; bottom: 0; }
+    .bar > div { height: 100%; background: var(--green); width: 100%; }
+  </style>
+</head>
+<body>
+  <main>
+    <svg class="check" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="48"/>
+      <path d="M28 52 L44 67 L73 36"/>
+    </svg>
+    <div id="msg">
+      <h1 id="title"></h1>
+      <p id="body"></p>
+    </div>
+  </main>
+
+  <nav id="langs" aria-label="Language"></nav>
+
+  <div class="bar"><div id="progress"></div></div>
+
+  <script>
+    // ===== Settings =====
+    const FORM_URL = "https://form.jotform.com/YOUR_FORM_ID"; // also update the meta refresh above
+    const FIRST_SECONDS = 10;     // how long the page shows after submitting
+    const LANGUAGE_SECONDS = 15;  // timer restarts at this after a language is tapped
+    // ====================
+
+    const LANGS = [
+      { code: "en", label: "English", dir: "ltr",
+        title: "Information Submitted Successfully",
+        body: "Please have a seat. The queue is on the TV screen." },
+      { code: "es", label: "Español", dir: "ltr",
+        title: "Información enviada con éxito",
+        body: "Por favor, tome asiento. La lista de espera aparece en la pantalla del televisor." },
+      { code: "pt", label: "Português", dir: "ltr",
+        title: "Informações enviadas com sucesso",
+        body: "Por favor, sente-se. A fila de espera aparece na tela da TV." },
+      { code: "ru", label: "Русский", dir: "ltr",
+        title: "Информация успешно отправлена",
+        body: "Пожалуйста, присаживайтесь. Очередь отображается на экране телевизора." },
+      { code: "tr", label: "Türkçe", dir: "ltr",
+        title: "Bilgileriniz başarıyla gönderildi",
+        body: "Lütfen oturun. Sıra durumu televizyon ekranında gösteriliyor." },
+      { code: "uz", label: "Oʻzbekcha", dir: "ltr",
+        title: "Maʼlumotlar muvaffaqiyatli yuborildi",
+        body: "Iltimos, oʻtiring. Navbat televizor ekranida koʻrsatiladi." },
+      { code: "ar", label: "العربية", dir: "rtl",
+        title: "تم إرسال المعلومات بنجاح",
+        body: "يرجى التفضل بالجلوس. قائمة الانتظار معروضة على شاشة التلفزيون." },
+    ];
+
+    const nav = document.getElementById("langs");
+    const msg = document.getElementById("msg");
+    const titleEl = document.getElementById("title");
+    const bodyEl = document.getElementById("body");
+    const progress = document.getElementById("progress");
+
+    function showLanguage(lang) {
+      msg.classList.add("fade");
+      setTimeout(() => {
+        titleEl.textContent = lang.title;
+        bodyEl.textContent = lang.body;
+        msg.lang = lang.code;
+        msg.dir = lang.dir;
+        msg.classList.remove("fade");
+      }, 150);
+      for (const b of nav.children) b.setAttribute("aria-pressed", b.dataset.code === lang.code);
+    }
+
+    // Countdown back to the form
+    let deadline, total;
+    function startTimer(seconds) {
+      total = seconds * 1000;
+      deadline = Date.now() + total;
+    }
+    function tick() {
+      const left = deadline - Date.now();
+      progress.style.width = Math.max(0, left / total * 100) + "%";
+      if (left <= 0) {
+        location.replace(FORM_URL); // replace() so Back can't return here
+      } else {
+        requestAnimationFrame(tick);
+      }
+    }
+
+    for (const lang of LANGS) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = lang.label;
+      b.lang = lang.code;
+      b.dataset.code = lang.code;
+      b.addEventListener("click", () => {
+        showLanguage(lang);
+        startTimer(LANGUAGE_SECONDS);
+      });
+      nav.appendChild(b);
+    }
+
+    // Titles and buttons are filled by script, so start with English
+    titleEl.textContent = LANGS[0].title;
+    bodyEl.textContent = LANGS[0].body;
+    nav.children[0].setAttribute("aria-pressed", "true");
+    startTimer(FIRST_SECONDS);
+    tick();
+  </script>
+</body>
+</html>
